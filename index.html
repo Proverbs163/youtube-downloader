@@ -2,33 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Download YouTube videos as MP4 or convert to MP3 audio - Fast, secure and easy to use">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https://i.ytimg.com; font-src https://cdnjs.cloudflare.com; connect-src 'self' https://api.allorigins.win">
+  <meta name="mobile-web-app-capable" content="yes">
   
   <title>YouTube Video Downloader | MP4 & MP3 Converter</title>
   
-  <!-- Preload critical resources -->
-  <link rel="preload" href="./style.css" as="style">
+  <!-- Preconnect for external resources -->
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://i.ytimg.com">
-  <link rel="preconnect" href="https://www.youtube.com">
   
-  <!-- PWA Metadata -->
-  <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#FF0000">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  
-  <!-- Non-critical CSS loaded after render -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
-  <link rel="stylesheet" href="./style.css?v=3.3" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./style.css?v=3.3">
-  </noscript>
+  <!-- CSS Loading -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="./style.css?v=3.4">
   
   <!-- Critical CSS -->
   <style>
@@ -87,22 +73,6 @@
       border-width: 0;
     }
     
-    /* Skeleton loading animation */
-    @keyframes shimmer {
-      0% { background-position: -468px 0 }
-      100% { background-position: 468px 0 }
-    }
-    .skeleton {
-      background: linear-gradient(to right, #f0f0f0 8%, #e0e0e0 18%, #f0f0f0 33%);
-      background-size: 800px 104px;
-      animation: shimmer 1.5s infinite linear;
-      border-radius: 4px;
-      margin-bottom: 15px;
-    }
-    .skeleton-input { height: 50px; }
-    .skeleton-options { height: 100px; }
-    .skeleton-steps { height: 200px; }
-    
     /* Error states */
     #error-container {
       position: fixed;
@@ -156,19 +126,12 @@
     <i class="fas fa-wifi"></i> You're currently offline
   </div>
   
-  <!-- Skeleton Loader -->
-  <div id="skeleton-loader">
-    <div class="skeleton skeleton-input"></div>
-    <div class="skeleton skeleton-options"></div>
-    <div class="skeleton skeleton-steps"></div>
-  </div>
-  
   <!-- App Content -->
   <div id="app">
     <!-- Header -->
     <header class="logo-section" aria-labelledby="app-title">
       <div class="logo">
-        <img src="./assets/icons/youtube.svg" alt="" width="48" height="48" loading="lazy"
+        <img src="./assets/icons/youtube.svg" alt="YouTube Logo" width="48" height="48" loading="lazy"
              onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path fill=\'red\' d=\'M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z\'/></svg>'">
         <h1 id="app-title">YouTube Downloader</h1>
       </div>
@@ -258,68 +221,49 @@
     </footer>
   </div>
 
-  <!-- Loading Indicator -->
-  <div id="loading-overlay" class="hidden" aria-hidden="true">
-    <div class="loading-spinner">
-      <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
-      <span class="sr-only">Processing...</span>
-    </div>
-  </div>
-
-  <script src="./script.js?v=<?= Date.now() ?>"></script>
   <script>
     // Set current year
     document.getElementById('current-year').textContent = new Date().getFullYear();
     
     // Network status detection
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    
     function updateOnlineStatus() {
       const notice = document.getElementById('offline-notice');
       notice.style.display = navigator.onLine ? 'none' : 'flex';
     }
-    
-    // Initial check
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
     
-    // Hide skeleton when loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('skeleton-loader').style.display = 'none';
-      
-      
-  // Error handling fallback
-  window.addEventListener('error', function(e) {
-    const errorContainer = document.getElementById('error-container');
-    errorContainer.innerHTML = `
-      <div class="error-message">
-        <i class="fas fa-exclamation-circle"></i>
-        <p>JavaScript failed to load. Please try refreshing the page.</p>
-        <button onclick="window.location.reload()">Reload Page</button>
-      </div>
-    `;
-    errorContainer.style.display = 'block';
-  });
-
-  // Load script with fallback
-  const script = document.createElement('script');
-  script.src = './script.js?v=' + Date.now();
-  script.onerror = function() {
-    const fallbackScript = document.createElement('script');
-    fallbackScript.src = 'https://cdn.jsdelivr.net/gh/your-repo@latest/script.js';
-    document.head.appendChild(fallbackScript);
-  };
-  document.head.appendChild(script);
+    // Error handling
+    window.addEventListener('error', function(e) {
+      const errorContainer = document.getElementById('error-container');
+      errorContainer.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>Application error occurred. Please refresh the page.</p>
+          <button onclick="window.location.reload()">Reload</button>
+        </div>
+      `;
+      errorContainer.style.display = 'block';
+    });
     
-    // Service Worker Registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => {
-          console.error('ServiceWorker registration failed: ', err);
-        });
-      });
+    // Load main script safely
+    const loadScript = () => {
+      const script = document.createElement('script');
+      script.src = `./script.js?v=${Date.now()}`;
+      script.onerror = () => {
+        console.error('Failed to load main script');
+        document.getElementById('error-container').style.display = 'block';
+      };
+      document.body.appendChild(script);
+    };
+    
+    // Start loading after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadScript);
+    } else {
+      loadScript();
     }
   </script>
 </body>
-
 </html>
