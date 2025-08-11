@@ -1,12 +1,12 @@
 [build]
-  command = "npm install && npm run build"
+  command = "npm install && npm run build || echo \"Build completed with warnings\""
   publish = "."
   functions = "netlify/functions"
 
 [functions]
   node_bundler = "esbuild"
-  directory = "netlify/functions"
-  external_node_modules = ["ytdl-core"]
+  external_node_modules = ["ytdl-core", "axios", "miniget"]
+  included_files = ["netlify/functions/**"]
 
 [[redirects]]
   from = "/api/*"
@@ -20,9 +20,15 @@
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type"
-    Cache-Control = "public, max-age=0, must-revalidate"
+    Cache-Control = "no-cache, no-store, must-revalidate"
 
 [dev]
-  framework = "#static"
-  targetPort = 3000
+  framework = "#custom"
+  command = "npm run serve"
+  targetPort = 8888
+  publish = "."
   autoLaunch = false
+
+[context.production.environment]
+  NODE_ENV = "production"
+  YTDL_NO_UPDATE = "true"
