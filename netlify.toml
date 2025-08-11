@@ -1,9 +1,28 @@
 [build]
-  command = "echo 'No build needed'"
+  command = "npm install && npm run build"
   publish = "."
   functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+  external_node_modules = ["ytdl-core"]
 
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+  force = true
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[dev]
+  framework = "#static"
+  targetPort = 3000
+  autoLaunch = false
