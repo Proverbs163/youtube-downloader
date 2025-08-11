@@ -287,18 +287,29 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('skeleton-loader').style.display = 'none';
       
-      // Fallback error handling
-      if (typeof initApp === 'undefined') {
-        document.getElementById('error-container').style.display = 'block';
-        document.getElementById('error-container').innerHTML = `
-          <div class="error-message">
-            <i class="fas fa-exclamation-circle"></i>
-            <p>JavaScript failed to load. Please try refreshing the page.</p>
-            <button onclick="window.location.reload()">Reload</button>
-          </div>
-        `;
-      }
-    });
+      
+  // Error handling fallback
+  window.addEventListener('error', function(e) {
+    const errorContainer = document.getElementById('error-container');
+    errorContainer.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>JavaScript failed to load. Please try refreshing the page.</p>
+        <button onclick="window.location.reload()">Reload Page</button>
+      </div>
+    `;
+    errorContainer.style.display = 'block';
+  });
+
+  // Load script with fallback
+  const script = document.createElement('script');
+  script.src = './script.js?v=' + Date.now();
+  script.onerror = function() {
+    const fallbackScript = document.createElement('script');
+    fallbackScript.src = 'https://cdn.jsdelivr.net/gh/your-repo@latest/script.js';
+    document.head.appendChild(fallbackScript);
+  };
+  document.head.appendChild(script);
     
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -310,4 +321,5 @@
     }
   </script>
 </body>
+
 </html>
