@@ -221,7 +221,7 @@
     </footer>
   </div>
 
-  <script>
+<script>
     // Set current year
     document.getElementById('current-year').textContent = new Date().getFullYear();
     
@@ -233,37 +233,45 @@
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
-    
-    // Error handling
-    window.addEventListener('error', function(e) {
-      const errorContainer = document.getElementById('error-container');
-      errorContainer.innerHTML = `
-        <div class="error-message">
-          <i class="fas fa-exclamation-circle"></i>
-          <p>Application error occurred. Please refresh the page.</p>
-          <button onclick="window.location.reload()">Reload</button>
-        </div>
-      `;
-      errorContainer.style.display = 'block';
+
+    // Temporary button handlers to ensure functionality
+    document.getElementById('analyze-btn')?.addEventListener('click', function() {
+      alert('Analyze button clicked!'); // Test if buttons work
     });
     
+    document.getElementById('download-btn')?.addEventListener('click', function() {
+      alert('Download button clicked!'); // Test if buttons work
+    });
+
     // Load main script safely
-    const loadScript = () => {
-      const script = document.createElement('script');
-      script.src = `./script.js?v=${Date.now()}`;
-      script.onerror = () => {
-        console.error('Failed to load main script');
-        document.getElementById('error-container').style.display = 'block';
-      };
-      document.body.appendChild(script);
+    const script = document.createElement('script');
+    script.src = `./script.js?v=${Date.now()}`;
+    script.onload = function() {
+      console.log('Main script loaded successfully');
+      // Remove temporary handlers when main script loads
+      const analyzeBtn = document.getElementById('analyze-btn');
+      const downloadBtn = document.getElementById('download-btn');
+      
+      if (analyzeBtn) {
+        analyzeBtn.replaceWith(analyzeBtn.cloneNode(true));
+      }
+      if (downloadBtn) {
+        downloadBtn.replaceWith(downloadBtn.cloneNode(true));
+      }
     };
-    
-    // Start loading after DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadScript);
-    } else {
-      loadScript();
-    }
+    script.onerror = function() {
+      console.error('Failed to load main script');
+      document.getElementById('error-container').innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>Failed to load application. Please refresh the page.</p>
+          <button onclick="window.location.reload()">Reload Page</button>
+        </div>
+      `;
+      document.getElementById('error-container').style.display = 'block';
+    };
+    document.body.appendChild(script);
   </script>
 </body>
 </html>
+
