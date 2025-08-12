@@ -222,53 +222,52 @@
   </div>
 
 <script>
-  // Set current year
-  document.getElementById('current-year').textContent = new Date().getFullYear();
-  
-  // Network status detection
-  function updateOnlineStatus() {
-    const notice = document.getElementById('offline-notice');
-    notice.style.display = navigator.onLine ? 'none' : 'flex';
-  }
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  updateOnlineStatus();
+document.getElementById('analyze-btn').addEventListener('click', async function() {
+  const btn = this;
+  const urlInput = document.getElementById('video-url');
+  const url = urlInput.value.trim();
 
-  // Load main script with enhanced error handling
-  const script = document.createElement('script');
-  script.src = `./script.js?v=${Date.now()}`;
-  
-  script.onload = function() {
-    console.log('Main script loaded successfully');
-    
-    // Initialize the app after script loads
-    if (typeof initApp === 'function') {
-      initApp();
-    } else {
-      console.error('initApp function not found');
-      showError('Application failed to initialize');
+  if (!url) {
+    alert('Please enter a YouTube URL');
+    return;
+  }
+
+  try {
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+    // Validate URL first
+    if (!url.includes('youtube.com/watch') && !url.includes('youtu.be/')) {
+      throw new Error('Please enter a valid YouTube URL');
     }
-  };
-  
-  script.onerror = function() {
-    showError('Failed to load application script');
-  };
-  
-  document.body.appendChild(script);
 
-  function showError(message) {
-    const errorContainer = document.getElementById('error-container');
-    errorContainer.innerHTML = `
-      <div class="error-message">
-        <i class="fas fa-exclamation-circle"></i>
-        <p>${message}</p>
-        <button onclick="window.location.reload()">Reload Page</button>
-      </div>
-    `;
-    errorContainer.style.display = 'block';
+    // Encode only the URL parameter
+    const response = await fetch(`/.netlify/functions/info?url=${encodeURIComponent(url)}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to analyze video');
+    }
+
+    const data = await response.json();
+    console.log('Video info:', data);
+    
+    // Show options to user
+    document.getElementById('options-container').classList.remove('hidden');
+    document.getElementById('download-btn').disabled = false;
+
+  } catch (error) {
+    console.error('Error:', error);
+    alert(`Error: ${error.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-search"></i> Analyze';
   }
+});
 </script>
 </body>
 </html>
+
 
 
