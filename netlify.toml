@@ -5,56 +5,31 @@
 
 [functions]
   node_bundler = "esbuild"
-
-  [functions.external_node_modules]
-    modules = [
-      "ytdl-core",
-      "axios",
-      "miniget",
-      "m3u8stream",
-      "sax"
-    ]
-
-  [functions.included_files]
-    paths = [
-      "netlify/functions/**/*.js",
-      "netlify/functions/package.json"
-    ]
-
-  [functions.timeout]
-    duration = 30  # 30 seconds
-
-  [functions.node_options]
-    flags = "--max-old-space-size=1024"
+  external_node_modules = ["ytdl-core", "axios", "miniget", "m3u8stream", "sax"]
+  included_files = ["netlify/functions/**/*.js", "netlify/functions/package.json"]
+  timeout = 30  # 30 second timeout
 
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
   force = true
-  conditions = {Language = ["en"]}
 
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Origin"
-    Cache-Control = "no-cache, max-age=0"
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
+    Access-Control-Allow-Headers = "Content-Type"
+    Cache-Control = "no-cache, no-store, must-revalidate"
 
 [dev]
   framework = "#custom"
-  command = "netlify-lambda serve netlify/functions --port 8888"
+  command = "npm run serve"
   targetPort = 8888
   publish = "."
   autoLaunch = false
 
-  [dev.environment]
-    NODE_ENV = "development"
-
 [context.production.environment]
   NODE_ENV = "production"
   YTDL_NO_UPDATE = "true"
-  YTDL_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
