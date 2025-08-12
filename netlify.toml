@@ -5,26 +5,29 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["ytdl-core", "axios", "miniget"]
+  external_node_modules = ["ytdl-core", "axios", "miniget", "m3u8stream", "sax"]  # Added ytdl-core dependencies
   included_files = ["netlify/functions/**"]
+  timeout = 30  # Explicit timeout setting
 
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
   force = true
+  conditions = {Language = ["en"]}  # Optional language condition
 
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type"
-    Cache-Control = "no-cache, no-store, must-revalidate"
+    Access-Control-Allow-Headers = "Content-Type, Origin"  # Added Origin
+    Cache-Control = "no-cache, max-age=0"
+    X-Content-Type-Options = "nosniff"  # Additional security header
 
 [dev]
   framework = "#custom"
-  command = "npm run serve"
+  command = "netlify-lambda serve netlify/functions --port 8888"  # More specific serve command
   targetPort = 8888
   publish = "."
   autoLaunch = false
@@ -32,3 +35,4 @@
 [context.production.environment]
   NODE_ENV = "production"
   YTDL_NO_UPDATE = "true"
+  YTDL_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"  # Avoids YouTube blocking
