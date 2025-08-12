@@ -5,10 +5,27 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["ytdl-core", "axios", "miniget", "m3u8stream", "sax"]
-  included_files = ["netlify/functions/**/*.js", "netlify/functions/package.json"]
-  timeout = 30  # 30 second timeout
-  node_options = "--max-old-space-size=1024"  # 1GB memory
+
+  [functions.external_node_modules]
+    modules = [
+      "ytdl-core",
+      "axios",
+      "miniget",
+      "m3u8stream",
+      "sax"
+    ]
+
+  [functions.included_files]
+    paths = [
+      "netlify/functions/**/*.js",
+      "netlify/functions/package.json"
+    ]
+
+  [functions.timeout]
+    duration = 30  # 30 seconds
+
+  [functions.node_options]
+    flags = "--max-old-space-size=1024"
 
 [[redirects]]
   from = "/api/*"
@@ -33,6 +50,7 @@
   targetPort = 8888
   publish = "."
   autoLaunch = false
+
   [dev.environment]
     NODE_ENV = "development"
 
