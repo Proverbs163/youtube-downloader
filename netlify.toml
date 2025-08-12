@@ -1,20 +1,11 @@
 [build]
   command = "npm install && npm run build"
   publish = "."
-  functions = "netlify/functions"
+  functions = "functions-build"  # Changed from netlify/functions
 
 [functions]
   node_bundler = "esbuild"
-
-  [functions."*"]
-  external_node_modules = [
-    "ytdl-core",
-    "axios",
-    "miniget",
-    "m3u8stream",
-    "sax"
-  ]
-
+  external_node_modules = ["ytdl-core", "axios", "miniget", "m3u8stream", "sax"]
   included_files = ["netlify/functions/**"]
   timeout = 30
 
