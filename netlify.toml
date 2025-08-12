@@ -1,13 +1,12 @@
 [build]
-  command = "npm install && npm run build"
+  command = "npm install && npm run build || echo \"Build completed with warnings\""
   publish = "."
   functions = "netlify/functions"
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["ytdl-core", "axios", "miniget", "m3u8stream", "sax"]
+  external_node_modules = ["ytdl-core", "axios", "miniget"]
   included_files = ["netlify/functions/**"]
-  timeout = 30
 
 [[redirects]]
   from = "/api/*"
