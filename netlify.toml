@@ -5,9 +5,24 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["ytdl-core", "axios", "miniget", "m3u8stream", "sax"]
-  included_files = ["netlify/functions/**"]
-  timeout = 30
+
+  [functions.external_node_modules]
+  modules = [
+    "ytdl-core",
+    "axios",
+    "miniget",
+    "m3u8stream",
+    "sax"
+  ]
+
+  [functions.included_files]
+  paths = [
+    "netlify/functions/**/*.js",
+    "netlify/functions/package.json"
+  ]
+
+  [functions.timeout]
+  duration = 30  # 30 seconds
 
 [[redirects]]
   from = "/api/*"
