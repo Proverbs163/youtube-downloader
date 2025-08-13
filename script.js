@@ -1,190 +1,216 @@
 // Main initialization function
 function initApp() {
-  console.log('Initializing application...');
+  console.log('Initializing YouTube Downloader...');
   
   // Elements
-  const analyzeBtn = document.getElementById('analyze-btn');
-  const downloadBtn = document.getElementById('download-btn');
-  const formatBtns = document.querySelectorAll('.format-btn');
-  const videoUrlInput = document.getElementById('video-url');
-  const optionsContainer = document.getElementById('options-container');
-  const resultContainer = document.getElementById('result-container');
-  const errorContainer = document.getElementById('error-container');
-  const offlineNotice = document.getElementById('offline-notice');
+  const elements = {
+    analyzeBtn: document.getElementById('analyze-btn'),
+    downloadBtn: document.getElementById('download-btn'),
+    formatBtns: document.querySelectorAll('.format-btn'),
+    videoUrlInput: document.getElementById('video-url'),
+    optionsContainer: document.getElementById('options-container'),
+    resultContainer: document.getElementById('result-container'),
+    errorContainer: document.getElementById('error-container'),
+    offlineNotice: document.getElementById('offline-notice')
+  };
 
-  // Current video data
-  let currentVideoData = null;
-  let selectedFormat = 'mp4'; // Default format
+  // State management
+  const state = {
+    currentVideo: null,
+    selectedFormat: 'mp4'
+  };
 
   // Verify all elements exist
-  if (!analyzeBtn || !downloadBtn || !videoUrlInput || !optionsContainer || !resultContainer) {
+  if (!elements.analyzeBtn || !elements.downloadBtn || !elements.videoUrlInput) {
     console.error('Critical elements missing from DOM');
     return;
   }
 
-  // Set current year in footer
-  document.getElementById('current-year').textContent = new Date().getFullYear();
-
-  // Network status detection
-  function updateOnlineStatus() {
-    offlineNotice.style.display = navigator.onLine ? 'none' : 'flex';
+  // Initialize the app
+  function initialize() {
+    setCurrentYear();
+    setupNetworkDetection();
+    setupFormatSelection();
+    setupEventListeners();
+    setInitialFormat();
+    console.log('App initialized successfully');
   }
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  updateOnlineStatus();
 
-  // Format selection
-  formatBtns.forEach(btn => {
-    btn.addEventListener('click', function() {
-      // Remove active class from all buttons
-      formatBtns.forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
-      
-      // Add active class to clicked button
-      this.classList.add('active');
-      this.setAttribute('aria-pressed', 'true');
-      
-      // Update selected format
-      selectedFormat = this.dataset.format;
-      console.log('Selected format:', selectedFormat); // Debug log
+  // Helper functions
+  function setCurrentYear() {
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  }
+
+  function setupNetworkDetection() {
+    const updateStatus = () => {
+      elements.offlineNotice.style.display = navigator.onLine ? 'none' : 'flex';
+    };
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    updateStatus();
+  }
+
+  function setupFormatSelection() {
+    elements.formatBtns.forEach(btn => {
+      btn.addEventListener('click', () => handleFormatSelection(btn));
     });
-  });
+  }
 
-  // Set initial active format (MP4)
-  document.querySelector('.format-btn[data-format="mp4"]').classList.add('active');
-  document.querySelector('.format-btn[data-format="mp4"]').setAttribute('aria-pressed', 'true');
+  function handleFormatSelection(selectedBtn) {
+    // Update UI
+    elements.formatBtns.forEach(btn => {
+      const isActive = btn === selectedBtn;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', isActive);
+    });
+    
+    // Update state
+    state.selectedFormat = selectedBtn.dataset.format;
+    console.log('Format changed to:', state.selectedFormat); // Debug
+  }
 
-  // Show error message
+  function setInitialFormat() {
+    const initialFormatBtn = document.querySelector('.format-btn[data-format="mp4"]');
+    if (initialFormatBtn) {
+      initialFormatBtn.classList.add('active');
+      initialFormatBtn.setAttribute('aria-pressed', 'true');
+    }
+  }
+
+  function setupEventListeners() {
+    elements.analyzeBtn.addEventListener('click', handleAnalyze);
+    elements.downloadBtn.addEventListener('click', handleDownload);
+    elements.videoUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') elements.analyzeBtn.click();
+    });
+  }
+
   function showError(message) {
-    errorContainer.innerHTML = `
+    elements.errorContainer.innerHTML = `
       <div class="error-message">
         <i class="fas fa-exclamation-circle"></i>
         <p>${message}</p>
         <button onclick="this.parentElement.parentElement.style.display='none'">Dismiss</button>
       </div>
     `;
-    errorContainer.style.display = 'block';
-    
-    setTimeout(() => {
-      errorContainer.style.display = 'none';
-    }, 5000);
+    elements.errorContainer.style.display = 'block';
+    setTimeout(() => elements.errorContainer.style.display = 'none', 5000);
   }
 
-  // Analyze button
-  analyzeBtn.addEventListener('click', async function() {
-    const url = videoUrlInput.value.trim();
-    
-    if (!url) {
-      showError('Please enter a YouTube URL');
-      return;
+  function setLoading(button, isLoading) {
+    if (button === elements.analyzeBtn) {
+      button.disabled = isLoading;
+      button.innerHTML = isLoading 
+        ? '<i class="fas fa-spinner fa-spin"></i> Analyzing...' 
+        : '<i class="fas fa-search"></i> Analyze';
+    } else if (button === elements.downloadBtn) {
+      button.disabled = isLoading;
+      button.innerHTML = isLoading
+        ? '<i class="fas fa-spinner fa-spin"></i> Preparing...'
+        : '<i class="fas fa-download"></i> Download Now';
     }
+  }
 
-    // Basic YouTube URL validation
-    if (!url.includes('youtube.com/watch') && !url.includes('youtu.be/')) {
-      showError('Please enter a valid YouTube URL');
-      return;
-    }
+  // Main handlers
+  async function handleAnalyze() {
+    const url = elements.videoUrlInput.value.trim();
+    
+    if (!url) return showError('Please enter a YouTube URL');
+    if (!isValidYouTubeUrl(url)) return showError('Please enter a valid YouTube URL');
 
     try {
-      this.disabled = true;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+      setLoading(elements.analyzeBtn, true);
       
       const response = await fetch(`/.netlify/functions/info?url=${encodeURIComponent(url)}`);
       const data = await response.json();
       
       if (!response.ok) throw new Error(data.error || 'Analysis failed');
       
-      // Store video data
-      currentVideoData = data;
-      
-      // Display video info
-      resultContainer.innerHTML = `
-        <div class="video-preview">
-          <img src="${data.thumbnail}" alt="Video thumbnail" loading="lazy">
-          <div class="video-info">
-            <h3>${data.title}</h3>
-            <p>Duration: ${formatTime(data.duration)}</p>
-          </div>
-        </div>
-      `;
-      resultContainer.classList.remove('hidden');
-      
-      // Show download options
-      optionsContainer.classList.remove('hidden');
-      downloadBtn.disabled = false;
+      // Update state and UI
+      state.currentVideo = data;
+      displayVideoInfo(data);
+      elements.optionsContainer.classList.remove('hidden');
+      elements.downloadBtn.disabled = false;
       
     } catch (error) {
       console.error('Analyze error:', error);
-      resultContainer.innerHTML = `
-        <div class="error-message">
-          <i class="fas fa-exclamation-circle"></i>
-          <p>${error.message}</p>
-        </div>
-      `;
-      resultContainer.classList.remove('hidden');
+      showResultError(error.message);
     } finally {
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-search"></i> Analyze';
+      setLoading(elements.analyzeBtn, false);
     }
-  });
+  }
 
-  // Download button
-  downloadBtn.addEventListener('click', async function() {
-    if (!currentVideoData) {
-      showError('Please analyze a video first');
-      return;
-    }
+  function isValidYouTubeUrl(url) {
+    return url.includes('youtube.com/watch') || url.includes('youtu.be/');
+  }
 
+  function displayVideoInfo(video) {
+    elements.resultContainer.innerHTML = `
+      <div class="video-preview">
+        <img src="${video.thumbnail}" alt="Video thumbnail" loading="lazy">
+        <div class="video-info">
+          <h3>${video.title}</h3>
+          <p>Duration: ${formatTime(video.duration)}</p>
+        </div>
+      </div>
+    `;
+    elements.resultContainer.classList.remove('hidden');
+  }
+
+  function showResultError(message) {
+    elements.resultContainer.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>${message}</p>
+      </div>
+    `;
+    elements.resultContainer.classList.remove('hidden');
+  }
+
+  async function handleDownload() {
+    if (!state.currentVideo) return showError('Please analyze a video first');
+    
     try {
-      this.disabled = true;
-      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+      setLoading(elements.downloadBtn, true);
+      console.log('Attempting download with format:', state.selectedFormat); // Debug
       
-      console.log('Downloading in format:', selectedFormat); // Debug log
-      
-      const response = await fetch(`/.netlify/functions/download?id=${currentVideoData.videoId}&format=${selectedFormat}`);
+      const response = await fetch(`/.netlify/functions/download?id=${state.currentVideo.videoId}&format=${state.selectedFormat}`);
       const data = await response.json();
       
       if (!response.ok) throw new Error(data.error || 'Download failed');
       if (!data.url) throw new Error('No download link received');
       
-      // Trigger download
-      const a = document.createElement('a');
-      a.href = data.url;
-      a.download = `${currentVideoData.title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}.${selectedFormat}`;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      triggerDownload(data.url, `${state.currentVideo.title}.${state.selectedFormat}`);
       
     } catch (error) {
       console.error('Download error:', error);
       showError(`Download failed: ${error.message}`);
     } finally {
-      this.disabled = false;
-      this.innerHTML = '<i class="fas fa-download"></i> Download Now';
+      setLoading(elements.downloadBtn, false);
     }
-  });
+  }
 
-  // Allow pressing Enter in the input field
-  videoUrlInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      analyzeBtn.click();
-    }
-  });
+  function triggerDownload(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename.replace(/[^a-z0-9._-]/gi, '_').substring(0, 100);
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 
-  console.log('Application initialized successfully');
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  // Start the app
+  initialize();
 }
 
-// Helper function to format seconds to MM:SS
-function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-// Call initApp when script loads
+// Start the app when ready
 if (document.readyState === 'complete') {
   initApp();
 } else {
