@@ -98,3 +98,24 @@ if (document.readyState === 'complete') {
 } else {
   document.addEventListener('DOMContentLoaded', initApp);
 }
+
+// After successful API response (in your analyze function)
+const resultContainer = document.getElementById('result-container');
+resultContainer.innerHTML = `
+  <div class="video-preview">
+    <img src="${data.thumbnail}" alt="Video thumbnail" class="thumbnail">
+    <div class="video-info">
+      <h3>${data.title}</h3>
+      <p>Duration: ${formatTime(data.duration)}</p>
+    </div>
+  </div>
+`;
+resultContainer.classList.remove('hidden');
+
+// Helper function to format seconds to MM:SS
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
